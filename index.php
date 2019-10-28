@@ -20,6 +20,12 @@
     padding: 2px 5px;
     cursor: pointer;
   }
+
+  a.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    /* pointer-events: none; */
+  }
   </style>
 </head>
 
@@ -71,7 +77,7 @@
   </div>
 
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/js/all.min.js"></script> -->
-  <script src="./dist/js/index.min.js"></script>
+  <script src="./src/js/index.js"></script>
   <script type="text/javascript">
   (function() {
     var repeat = new Repeater({
@@ -79,6 +85,7 @@
       template: '#repeat-template',
       addButton: '#repeat-add',
       startingRepeat: 1,
+      min: 1,
       max: 3,
       afterAdd: function(item) {
         repeat2.reInit();
@@ -88,6 +95,7 @@
       container: '#repeat-container-2',
       template: '#repeat-template-2',
       addButton: '#repeat-add-2',
+      min: 2,
       max: 4
     })
   })()

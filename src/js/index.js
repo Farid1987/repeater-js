@@ -13,7 +13,7 @@
       template: "",
       addButton: "",
       startingRepeat: 0,
-      min: 1,
+      min: 0,
       max: null,
       beforeAdd: function() {},
       afterAdd: function(item) {},
@@ -38,16 +38,27 @@
     var repeaterWrapper = findParentByclass(clickedButton, "repeater");
     var container = repeaterWrapper.querySelector(this.options.container);
 
-    if (this.options.max && container.children.length >= this.options.max) {
+    if (this.options.max && checkMaximum.call(this, container)) {
       return;
     }
     container.insertAdjacentHTML("beforeend", template); //adding to dom
 
+    console.log(checkMinimum.call(this, container));
+
+    checkMinimum.call(this, container)
+      ? disabledButtonDel.call(this, container)
+      : enabledButtonDel.call(this, container);
+
     var lastItem = getLastItem(container);
     var buttonDel = lastItem.querySelector(".repeat-del");
-    buttonDel.addEventListener("click", () => {
-      this.deleteItem(buttonDel);
-    });
+    if (buttonDel) {
+      buttonDel.addEventListener("click", () => {
+        if (buttonDel.classList.contains("disabled")) {
+          return;
+        }
+        this.deleteItem(buttonDel);
+      });
+    }
 
     this.options.afterAdd.call(this, lastItem);
   };
@@ -55,10 +66,17 @@
   // remove Item
   Repeater.prototype.deleteItem = function(target) {
     var el = findParentByclass(target, "repeat-item");
+    var repeaterWrapper = findParentByclass(target, "repeater");
 
     if (!this.options.beforeDelete.call(this, el)) return;
 
     el.parentNode.removeChild(el);
+
+    var container = repeaterWrapper.querySelector(this.options.container);
+    checkMinimum.call(this, container)
+      ? disabledButtonDel.call(this, container)
+      : enabledButtonDel.call(this, container);
+
     this.options.afterDelete.call(this);
   };
 
@@ -67,15 +85,67 @@
       var button = $(this.options.addButton);
 
       if (button.length > 0) {
-        for (let i = 0; i < button.length; i++) {
-          var newButton = button[i].cloneNode(true);
-          button[i].parentNode.replaceChild(newButton, button[i]);
+        for (let btn of button) {
+          var newButton = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newButton, btn);
         }
       }
 
       init.call(this);
     }
   };
+
+  function checkMaximum(container) {
+    var totalItem = [...container.children];
+    totalItem = totalItem.reduce((acc, value) => {
+      return value.classList.contains("repeat-item") ? acc + 1 : acc;
+    }, 0);
+    return totalItem >= this.options.max ? true : false;
+  }
+
+  function checkMinimum(container) {
+    var totalItem = [...container.children];
+    totalItem = totalItem.reduce((acc, value) => {
+      return value.classList.contains("repeat-item") ? acc + 1 : acc;
+    }, 0);
+    return totalItem <= this.options.min ? true : false;
+  }
+
+  function disabledButtonDel(container) {
+    var delButton = [...container.querySelectorAll(".repeat-del")];
+    var nestedRepeater = container.querySelectorAll(".repeater");
+    if (nestedRepeater.length > 0) {
+      for (let repeater of nestedRepeater) {
+        var delButtonNested = [...repeater.querySelectorAll(".repeat-del")];
+        if (delButtonNested.length > 0) {
+          delButton = delButton.filter(function(value, index) {
+            return !delButtonNested.includes(value);
+          });
+        }
+      }
+    }
+    for (let button of delButton) {
+      button.classList.add("disabled");
+    }
+  }
+
+  function enabledButtonDel(container) {
+    var delButton = [...container.querySelectorAll(".repeat-del")];
+    var nestedRepeater = container.querySelectorAll(".repeater");
+    if (nestedRepeater.length > 0) {
+      for (let repeater of nestedRepeater) {
+        var delButtonNested = [...repeater.querySelectorAll(".repeat-del")];
+        if (delButtonNested.length > 0) {
+          delButton = delButton.filter(function(value, index) {
+            return !delButtonNested.includes(value);
+          });
+        }
+      }
+    }
+    for (let button of delButton) {
+      button.classList.remove("disabled");
+    }
+  }
 
   function getSpecificTemplate() {
     var template = $(this.options.template)[0].innerHTML;
@@ -96,12 +166,9 @@
     var child = new Array();
     var allChild = container.childNodes;
 
-    for (let index = 0; index < allChild.length; index++) {
-      if (
-        allChild[index].nodeType === 1 &&
-        allChild[index].classList.contains("repeat-item")
-      ) {
-        child.push(allChild[index]);
+    for (let chd of allChild) {
+      if (chd.nodeType === 1 && chd.classList.contains("repeat-item")) {
+        child.push(chd);
       }
     }
     return child[child.length - 1];
@@ -115,8 +182,8 @@
       var button = $(parent.options.addButton);
 
       if (button.length > 0) {
-        for (let i = 0; i < button.length; i++) {
-          button[i].addEventListener("click", function(e) {
+        for (let btn of button) {
+          btn.addEventListener("click", function(e) {
             e.preventDefault();
             parent.addItem(this);
           });
