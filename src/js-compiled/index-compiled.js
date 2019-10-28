@@ -16,6 +16,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
   // constructor
   window.Repeater = function () {
+    // default setting
     var defaults = {
       container: "",
       template: "",
@@ -35,28 +36,31 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       this.options = Object.assign(defaults, arguments[0]);
     }
 
+    // initiating library
     init.call(this);
   };
 
-  // add Item
+  // Global function add Item
   Repeater.prototype.addItem = function (clickedButton) {
     var _this = this;
 
+    //run function before add Element
     this.options.beforeAdd.call(this);
 
     var template = getSpecificTemplate.call(this); //get template
     var repeaterWrapper = findParentByclass(clickedButton, "repeater");
     var container = repeaterWrapper.querySelector(this.options.container);
 
+    // check if has options max and if total item greater or equal max value
     if (this.options.max && checkMaximum.call(this, container)) {
       return;
     }
     container.insertAdjacentHTML("beforeend", template); //adding to dom
 
-    console.log(checkMinimum.call(this, container));
+    // check if has options min and if total item less or equal min value
+    this.options.min && checkMinimum.call(this, container) ? disabledButtonDel.call(this, container) : enabledButtonDel.call(this, container);
 
-    checkMinimum.call(this, container) ? disabledButtonDel.call(this, container) : enabledButtonDel.call(this, container);
-
+    // add event listener to added delete button
     var lastItem = getLastItem(container);
     var buttonDel = lastItem.querySelector(".repeat-del");
     if (buttonDel) {
@@ -64,28 +68,35 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         if (buttonDel.classList.contains("disabled")) {
           return;
         }
-        _this.deleteItem(buttonDel);
+        var elementToDel = findParentByclass(buttonDel, "repeat-item");
+        _this.deleteItem(elementToDel);
       });
     }
 
+    // run function after add Element
     this.options.afterAdd.call(this, lastItem);
   };
 
-  // remove Item
-  Repeater.prototype.deleteItem = function (target) {
-    var el = findParentByclass(target, "repeat-item");
-    var repeaterWrapper = findParentByclass(target, "repeater");
-
-    if (!this.options.beforeDelete.call(this, el)) return;
-
-    el.parentNode.removeChild(el);
-
+  // Global function remove Item
+  Repeater.prototype.deleteItem = function (elementToDel) {
+    var repeaterWrapper = findParentByclass(elementToDel, "repeater");
     var container = repeaterWrapper.querySelector(this.options.container);
-    checkMinimum.call(this, container) ? disabledButtonDel.call(this, container) : enabledButtonDel.call(this, container);
 
+    // run function before delete element (return boolean)
+    if (!this.options.beforeDelete.call(this, elementToDel)) return;
+
+    // delete element from dom
+    elementToDel.parentNode.removeChild(elementToDel);
+
+    // check if has options min and if total item less or equal min value
+    this.options.min && checkMinimum.call(this, container) ? disabledButtonDel.call(this, container) : enabledButtonDel.call(this, container);
+
+    // run function after delete element
     this.options.afterDelete.call(this);
   };
 
+  // Global function re Init, use to re initialize library
+  // if use nested repeatable, add reInit function to function afterAdd parent repeatable
   Repeater.prototype.reInit = function () {
     if (this.options.addButton) {
       var button = $(this.options.addButton);
@@ -122,6 +133,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
   };
 
+  // function checkMaximum
+  // compare total item and options max
   function checkMaximum(container) {
     var totalItem = [].concat(_toConsumableArray(container.children));
     totalItem = totalItem.reduce(function (acc, value) {
@@ -130,6 +143,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return totalItem >= this.options.max ? true : false;
   }
 
+  // function checkMinimum
+  // compare total item and options min
   function checkMinimum(container) {
     var totalItem = [].concat(_toConsumableArray(container.children));
     totalItem = totalItem.reduce(function (acc, value) {
@@ -138,6 +153,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return totalItem <= this.options.min ? true : false;
   }
 
+  // function disabledButtonDel
+  // disabled button delete if total item == options min
   function disabledButtonDel(container) {
     var delButton = [].concat(_toConsumableArray(container.querySelectorAll(".repeat-del")));
     var nestedRepeater = container.querySelectorAll(".repeater");
@@ -198,6 +215,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
   }
 
+  // function disabledButtonDel
+  // disabled button delete if total item > options min
   function enabledButtonDel(container) {
     var delButton = [].concat(_toConsumableArray(container.querySelectorAll(".repeat-del")));
     var nestedRepeater = container.querySelectorAll(".repeater");
@@ -258,13 +277,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
   }
 
+  // function getSpecificTemplate
+  // get a specific template from template repeatable
   function getSpecificTemplate() {
     var template = $(this.options.template)[0].innerHTML;
     template = template.replace(/{\++}/g, this.options.startingRepeat++);
     return template;
   }
 
-  // function to find parent element with class, like parents() in jquery
+  // function findParentByclass
+  // find parent element with specific class, like parents() in jquery
   function findParentByclass(el, classParentToFind) {
     if (el.parentNode.classList.contains(classParentToFind)) {
       return el.parentNode;
@@ -273,6 +295,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
   }
 
+  // function getLastItem
+  // get last item or element with class repeat-item from spesific container
   function getLastItem(container) {
     var child = new Array();
     var allChild = container.childNodes;

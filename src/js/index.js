@@ -2,13 +2,14 @@
   "use strict";
 
   // function to get element in DOM
-  var $ = function(selector) {
+  const $ = function(selector) {
     return document.querySelectorAll(selector);
   };
 
   // constructor
   window.Repeater = function() {
-    var defaults = {
+    // default setting
+    let defaults = {
       container: "",
       template: "",
       addButton: "",
@@ -27,59 +28,69 @@
       this.options = Object.assign(defaults, arguments[0]);
     }
 
+    // initiating library
     init.call(this);
   };
 
-  // add Item
+  // Global function add Item
   Repeater.prototype.addItem = function(clickedButton) {
+    //run function before add Element
     this.options.beforeAdd.call(this);
 
-    var template = getSpecificTemplate.call(this); //get template
-    var repeaterWrapper = findParentByclass(clickedButton, "repeater");
-    var container = repeaterWrapper.querySelector(this.options.container);
+    const template = getSpecificTemplate.call(this); //get template
+    const repeaterWrapper = findParentByclass(clickedButton, "repeater");
+    const container = repeaterWrapper.querySelector(this.options.container);
 
+    // check if has options max and if total item greater or equal max value
     if (this.options.max && checkMaximum.call(this, container)) {
       return;
     }
     container.insertAdjacentHTML("beforeend", template); //adding to dom
 
-    console.log(checkMinimum.call(this, container));
-
-    checkMinimum.call(this, container)
+    // check if has options min and if total item less or equal min value
+    this.options.min && checkMinimum.call(this, container)
       ? disabledButtonDel.call(this, container)
       : enabledButtonDel.call(this, container);
 
-    var lastItem = getLastItem(container);
-    var buttonDel = lastItem.querySelector(".repeat-del");
+    // add event listener to added delete button
+    const lastItem = getLastItem(container);
+    const buttonDel = lastItem.querySelector(".repeat-del");
     if (buttonDel) {
       buttonDel.addEventListener("click", () => {
         if (buttonDel.classList.contains("disabled")) {
           return;
         }
-        this.deleteItem(buttonDel);
+        const elementToDel = findParentByclass(buttonDel, "repeat-item");
+        this.deleteItem(elementToDel);
       });
     }
 
+    // run function after add Element
     this.options.afterAdd.call(this, lastItem);
   };
 
-  // remove Item
-  Repeater.prototype.deleteItem = function(target) {
-    var el = findParentByclass(target, "repeat-item");
-    var repeaterWrapper = findParentByclass(target, "repeater");
+  // Global function remove Item
+  Repeater.prototype.deleteItem = function(elementToDel) {
+    const repeaterWrapper = findParentByclass(elementToDel, "repeater");
+    const container = repeaterWrapper.querySelector(this.options.container);
 
-    if (!this.options.beforeDelete.call(this, el)) return;
+    // run function before delete element (return boolean)
+    if (!this.options.beforeDelete.call(this, elementToDel)) return;
 
-    el.parentNode.removeChild(el);
+    // delete element from dom
+    elementToDel.parentNode.removeChild(elementToDel);
 
-    var container = repeaterWrapper.querySelector(this.options.container);
-    checkMinimum.call(this, container)
+    // check if has options min and if total item less or equal min value
+    this.options.min && checkMinimum.call(this, container)
       ? disabledButtonDel.call(this, container)
       : enabledButtonDel.call(this, container);
 
+    // run function after delete element
     this.options.afterDelete.call(this);
   };
 
+  // Global function re Init, use to re initialize library
+  // if use nested repeatable, add reInit function to function afterAdd parent repeatable
   Repeater.prototype.reInit = function() {
     if (this.options.addButton) {
       var button = $(this.options.addButton);
@@ -95,6 +106,8 @@
     }
   };
 
+  // function checkMaximum
+  // compare total item and options max
   function checkMaximum(container) {
     var totalItem = [...container.children];
     totalItem = totalItem.reduce((acc, value) => {
@@ -103,6 +116,8 @@
     return totalItem >= this.options.max ? true : false;
   }
 
+  // function checkMinimum
+  // compare total item and options min
   function checkMinimum(container) {
     var totalItem = [...container.children];
     totalItem = totalItem.reduce((acc, value) => {
@@ -111,6 +126,8 @@
     return totalItem <= this.options.min ? true : false;
   }
 
+  // function disabledButtonDel
+  // disabled button delete if total item == options min
   function disabledButtonDel(container) {
     var delButton = [...container.querySelectorAll(".repeat-del")];
     var nestedRepeater = container.querySelectorAll(".repeater");
@@ -129,6 +146,8 @@
     }
   }
 
+  // function disabledButtonDel
+  // disabled button delete if total item > options min
   function enabledButtonDel(container) {
     var delButton = [...container.querySelectorAll(".repeat-del")];
     var nestedRepeater = container.querySelectorAll(".repeater");
@@ -147,13 +166,16 @@
     }
   }
 
+  // function getSpecificTemplate
+  // get a specific template from template repeatable
   function getSpecificTemplate() {
     var template = $(this.options.template)[0].innerHTML;
     template = template.replace(/{\++}/g, this.options.startingRepeat++);
     return template;
   }
 
-  // function to find parent element with class, like parents() in jquery
+  // function findParentByclass
+  // find parent element with specific class, like parents() in jquery
   function findParentByclass(el, classParentToFind) {
     if (el.parentNode.classList.contains(classParentToFind)) {
       return el.parentNode;
@@ -162,6 +184,8 @@
     }
   }
 
+  // function getLastItem
+  // get last item or element with class repeat-item from spesific container
   function getLastItem(container) {
     var child = new Array();
     var allChild = container.childNodes;

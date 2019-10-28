@@ -97,7 +97,7 @@
       addButton: '#repeat-add-2',
       min: 2,
       max: 4
-    })
+    });
   })()
   </script>
 </body>
