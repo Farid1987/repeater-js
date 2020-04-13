@@ -1,13 +1,13 @@
-(function() {
+(function () {
   "use strict";
 
   // function to get element in DOM
-  const $ = function(selector) {
+  const $ = function (selector) {
     return document.querySelectorAll(selector);
   };
 
   // constructor
-  window.Repeater = function() {
+  window.Repeater = function () {
     // default setting
     let defaults = {
       container: "",
@@ -16,12 +16,12 @@
       startingRepeat: 0,
       min: 0,
       max: null,
-      beforeAdd: function() {},
-      afterAdd: function(item) {},
-      beforeDelete: function(item) {
+      beforeAdd: function () {},
+      afterAdd: function (item) {},
+      beforeDelete: function (item) {
         return true;
       },
-      afterDelete: function() {}
+      afterDelete: function (item, container) {},
     };
 
     if (arguments[0] && typeof arguments[0] === "object") {
@@ -33,13 +33,13 @@
   };
 
   // Global function add Item
-  Repeater.prototype.addItem = function(clickedButton) {
+  Repeater.prototype.addItem = function (clickedButton) {
     //run function before add Element
     this.options.beforeAdd.call(this);
 
-    const template = getSpecificTemplate.call(this); //get template
     const repeaterWrapper = findParentByclass(clickedButton, "repeater");
     const container = repeaterWrapper.querySelector(this.options.container);
+    const template = getSpecificTemplate.call(this, repeaterWrapper); //get template
 
     // check if has options max and if total item greater or equal max value
     if (this.options.max && checkMaximum.call(this, container)) {
@@ -56,7 +56,9 @@
     const lastItem = getLastItem(container);
     const buttonDel = lastItem.querySelector(".repeat-del");
     if (buttonDel) {
-      buttonDel.addEventListener("click", () => {
+      buttonDel.addEventListener("click", (e) => {
+        e.preventDefault();
+
         if (buttonDel.classList.contains("disabled")) {
           return;
         }
@@ -70,7 +72,7 @@
   };
 
   // Global function remove Item
-  Repeater.prototype.deleteItem = function(elementToDel) {
+  Repeater.prototype.deleteItem = function (elementToDel) {
     const repeaterWrapper = findParentByclass(elementToDel, "repeater");
     const container = repeaterWrapper.querySelector(this.options.container);
 
@@ -86,12 +88,12 @@
       : enabledButtonDel.call(this, container);
 
     // run function after delete element
-    this.options.afterDelete.call(this);
+    this.options.afterDelete.call(this, elementToDel, container);
   };
 
   // Global function re Init, use to re initialize library
   // if use nested repeatable, add reInit function to function afterAdd parent repeatable
-  Repeater.prototype.reInit = function() {
+  Repeater.prototype.reInit = function () {
     if (this.options.addButton) {
       var button = $(this.options.addButton);
 
@@ -129,18 +131,8 @@
   // function disabledButtonDel
   // disabled button delete if total item == options min
   function disabledButtonDel(container) {
-    var delButton = [...container.querySelectorAll(".repeat-del")];
-    var nestedRepeater = container.querySelectorAll(".repeater");
-    if (nestedRepeater.length > 0) {
-      for (let repeater of nestedRepeater) {
-        var delButtonNested = [...repeater.querySelectorAll(".repeat-del")];
-        if (delButtonNested.length > 0) {
-          delButton = delButton.filter(function(value, index) {
-            return !delButtonNested.includes(value);
-          });
-        }
-      }
-    }
+    var delButton = getAllBtnDel(container);
+
     for (let button of delButton) {
       button.classList.add("disabled");
     }
@@ -149,27 +141,34 @@
   // function disabledButtonDel
   // disabled button delete if total item > options min
   function enabledButtonDel(container) {
+    var delButton = getAllBtnDel(container);
+    for (let button of delButton) {
+      button.classList.remove("disabled");
+    }
+  }
+
+  // function getAllBtnDel
+  // get all button delete in container, exclude nested repeater
+  function getAllBtnDel(container) {
     var delButton = [...container.querySelectorAll(".repeat-del")];
     var nestedRepeater = container.querySelectorAll(".repeater");
     if (nestedRepeater.length > 0) {
       for (let repeater of nestedRepeater) {
         var delButtonNested = [...repeater.querySelectorAll(".repeat-del")];
         if (delButtonNested.length > 0) {
-          delButton = delButton.filter(function(value, index) {
+          delButton = delButton.filter(function (value, index) {
             return !delButtonNested.includes(value);
           });
         }
       }
     }
-    for (let button of delButton) {
-      button.classList.remove("disabled");
-    }
+    return delButton;
   }
 
   // function getSpecificTemplate
   // get a specific template from template repeatable
-  function getSpecificTemplate() {
-    var template = $(this.options.template)[0].innerHTML;
+  function getSpecificTemplate(wrapper) {
+    var template = wrapper.querySelector(this.options.template).innerHTML;
     template = template.replace(/{\++}/g, this.options.startingRepeat++);
     return template;
   }
@@ -204,13 +203,35 @@
 
     if (parent.options.addButton && parent.options.container) {
       var button = $(parent.options.addButton);
+      var container = $(parent.options.container);
 
       if (button.length > 0) {
         for (let btn of button) {
-          btn.addEventListener("click", function(e) {
+          btn.addEventListener("click", function (e) {
             e.preventDefault();
             parent.addItem(this);
           });
+        }
+      }
+      if (container.length > 0) {
+        for (let cont of container) {
+          var buttonDel = getAllBtnDel(cont);
+
+          if (buttonDel.length > 0) {
+            for (let btn of buttonDel) {
+              btn.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                if (parent.options.min && checkMinimum.call(parent, cont)) {
+                  disabledButtonDel.call(parent, cont);
+                  return;
+                }
+
+                const elementToDel = findParentByclass(this, "repeat-item");
+                parent.deleteItem(elementToDel);
+              });
+            }
+          }
         }
       }
     }

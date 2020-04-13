@@ -29,7 +29,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       beforeDelete: function beforeDelete(item) {
         return true;
       },
-      afterDelete: function afterDelete() {}
+      afterDelete: function afterDelete(item, container) {}
     };
 
     if (arguments[0] && _typeof(arguments[0]) === "object") {
@@ -47,9 +47,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     //run function before add Element
     this.options.beforeAdd.call(this);
 
-    var template = getSpecificTemplate.call(this); //get template
     var repeaterWrapper = findParentByclass(clickedButton, "repeater");
     var container = repeaterWrapper.querySelector(this.options.container);
+    var template = getSpecificTemplate.call(this, repeaterWrapper); //get template
 
     // check if has options max and if total item greater or equal max value
     if (this.options.max && checkMaximum.call(this, container)) {
@@ -64,7 +64,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var lastItem = getLastItem(container);
     var buttonDel = lastItem.querySelector(".repeat-del");
     if (buttonDel) {
-      buttonDel.addEventListener("click", function () {
+      buttonDel.addEventListener("click", function (e) {
+        e.preventDefault();
+
         if (buttonDel.classList.contains("disabled")) {
           return;
         }
@@ -92,7 +94,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     this.options.min && checkMinimum.call(this, container) ? disabledButtonDel.call(this, container) : enabledButtonDel.call(this, container);
 
     // run function after delete element
-    this.options.afterDelete.call(this);
+    this.options.afterDelete.call(this, elementToDel, container);
   };
 
   // Global function re Init, use to re initialize library
@@ -156,39 +158,38 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   // function disabledButtonDel
   // disabled button delete if total item == options min
   function disabledButtonDel(container) {
-    var delButton = [].concat(_toConsumableArray(container.querySelectorAll(".repeat-del")));
-    var nestedRepeater = container.querySelectorAll(".repeater");
-    if (nestedRepeater.length > 0) {
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+    var delButton = getAllBtnDel(container);
 
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = delButton[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var button = _step2.value;
+
+        button.classList.add("disabled");
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
       try {
-        for (var _iterator2 = nestedRepeater[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var repeater = _step2.value;
-
-          var delButtonNested = [].concat(_toConsumableArray(repeater.querySelectorAll(".repeat-del")));
-          if (delButtonNested.length > 0) {
-            delButton = delButton.filter(function (value, index) {
-              return !delButtonNested.includes(value);
-            });
-          }
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          _iterator2.return();
         }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
       } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
+        if (_didIteratorError2) {
+          throw _iteratorError2;
         }
       }
     }
+  }
+
+  // function disabledButtonDel
+  // disabled button delete if total item > options min
+  function enabledButtonDel(container) {
+    var delButton = getAllBtnDel(container);
     var _iteratorNormalCompletion3 = true;
     var _didIteratorError3 = false;
     var _iteratorError3 = undefined;
@@ -197,7 +198,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       for (var _iterator3 = delButton[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
         var button = _step3.value;
 
-        button.classList.add("disabled");
+        button.classList.remove("disabled");
       }
     } catch (err) {
       _didIteratorError3 = true;
@@ -215,9 +216,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
   }
 
-  // function disabledButtonDel
-  // disabled button delete if total item > options min
-  function enabledButtonDel(container) {
+  // function getAllBtnDel
+  // get all button delete in container, exclude nested repeater
+  function getAllBtnDel(container) {
     var delButton = [].concat(_toConsumableArray(container.querySelectorAll(".repeat-del")));
     var nestedRepeater = container.querySelectorAll(".repeater");
     if (nestedRepeater.length > 0) {
@@ -251,36 +252,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
       }
     }
-    var _iteratorNormalCompletion5 = true;
-    var _didIteratorError5 = false;
-    var _iteratorError5 = undefined;
-
-    try {
-      for (var _iterator5 = delButton[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-        var button = _step5.value;
-
-        button.classList.remove("disabled");
-      }
-    } catch (err) {
-      _didIteratorError5 = true;
-      _iteratorError5 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion5 && _iterator5.return) {
-          _iterator5.return();
-        }
-      } finally {
-        if (_didIteratorError5) {
-          throw _iteratorError5;
-        }
-      }
-    }
+    return delButton;
   }
 
   // function getSpecificTemplate
   // get a specific template from template repeatable
-  function getSpecificTemplate() {
-    var template = $(this.options.template)[0].innerHTML;
+  function getSpecificTemplate(wrapper) {
+    var template = wrapper.querySelector(this.options.template).innerHTML;
     template = template.replace(/{\++}/g, this.options.startingRepeat++);
     return template;
   }
@@ -301,29 +279,29 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var child = new Array();
     var allChild = container.childNodes;
 
-    var _iteratorNormalCompletion6 = true;
-    var _didIteratorError6 = false;
-    var _iteratorError6 = undefined;
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
 
     try {
-      for (var _iterator6 = allChild[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-        var chd = _step6.value;
+      for (var _iterator5 = allChild[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        var chd = _step5.value;
 
         if (chd.nodeType === 1 && chd.classList.contains("repeat-item")) {
           child.push(chd);
         }
       }
     } catch (err) {
-      _didIteratorError6 = true;
-      _iteratorError6 = err;
+      _didIteratorError5 = true;
+      _iteratorError5 = err;
     } finally {
       try {
-        if (!_iteratorNormalCompletion6 && _iterator6.return) {
-          _iterator6.return();
+        if (!_iteratorNormalCompletion5 && _iterator5.return) {
+          _iterator5.return();
         }
       } finally {
-        if (_didIteratorError6) {
-          throw _iteratorError6;
+        if (_didIteratorError5) {
+          throw _iteratorError5;
         }
       }
     }
@@ -337,20 +315,90 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     if (parent.options.addButton && parent.options.container) {
       var button = $(parent.options.addButton);
+      var container = $(parent.options.container);
 
       if (button.length > 0) {
-        var _iteratorNormalCompletion7 = true;
-        var _didIteratorError7 = false;
-        var _iteratorError7 = undefined;
+        var _iteratorNormalCompletion6 = true;
+        var _didIteratorError6 = false;
+        var _iteratorError6 = undefined;
 
         try {
-          for (var _iterator7 = button[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-            var btn = _step7.value;
+          for (var _iterator6 = button[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            var btn = _step6.value;
 
             btn.addEventListener("click", function (e) {
               e.preventDefault();
               parent.addItem(this);
             });
+          }
+        } catch (err) {
+          _didIteratorError6 = true;
+          _iteratorError6 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion6 && _iterator6.return) {
+              _iterator6.return();
+            }
+          } finally {
+            if (_didIteratorError6) {
+              throw _iteratorError6;
+            }
+          }
+        }
+      }
+      if (container.length > 0) {
+        var _loop = function _loop(cont) {
+          buttonDel = getAllBtnDel(cont);
+
+
+          if (buttonDel.length > 0) {
+            var _iteratorNormalCompletion8 = true;
+            var _didIteratorError8 = false;
+            var _iteratorError8 = undefined;
+
+            try {
+              for (var _iterator8 = buttonDel[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                var _btn = _step8.value;
+
+                _btn.addEventListener("click", function (e) {
+                  e.preventDefault();
+
+                  if (parent.options.min && checkMinimum.call(parent, cont)) {
+                    disabledButtonDel.call(parent, cont);
+                    return;
+                  }
+
+                  var elementToDel = findParentByclass(this, "repeat-item");
+                  parent.deleteItem(elementToDel);
+                });
+              }
+            } catch (err) {
+              _didIteratorError8 = true;
+              _iteratorError8 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                  _iterator8.return();
+                }
+              } finally {
+                if (_didIteratorError8) {
+                  throw _iteratorError8;
+                }
+              }
+            }
+          }
+        };
+
+        var _iteratorNormalCompletion7 = true;
+        var _didIteratorError7 = false;
+        var _iteratorError7 = undefined;
+
+        try {
+          for (var _iterator7 = container[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+            var cont = _step7.value;
+            var buttonDel;
+
+            _loop(cont);
           }
         } catch (err) {
           _didIteratorError7 = true;
