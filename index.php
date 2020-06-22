@@ -11,7 +11,7 @@
 
   <div class="wrapper">
     <div class="repeater">
-      <button class="repeat-add"><i class="fa fa-plus"></i></button>
+      <button class="repeat-add add-btn"><i class="fa fa-plus"></i></button>
       <table>
         <thead>
           <tr>
@@ -27,13 +27,21 @@
             </td>
             <td class="repeater">
               <div class="repeat-container-2">
-                <div class="repeat-item">
+                <div class="repeat-item nested-repeat-item">
                   <input type="text" />
-                  <a class="repeat-add-2" class="repeat-add-2">
+                  <a class="repeat-add-2 add-btn">
                     <i class="fa fa-plus"></i>
                   </a>
                 </div>
               </div>
+              <template class="repeat-template-2">
+                <div class="repeat-item nested-repeat-item">
+                  <input type="text" />
+                  <a class="repeat-del">
+                    <i class="fa fa-minus"></i>
+                  </a>
+                </div>
+              </template>
             </td>
             <td>
               <a class="repeat-del">
@@ -43,104 +51,37 @@
           </tr>
         </tbody>
       </table>
-      <script type="text" class="repeat-template-2">
-        <div class="repeat-item">
-          <input type="text"/>
-          <a class="repeat-del">
-            <i class="fa fa-minus"></i>
-          </a>
-        </div>
-      </script>
-      <script type="text" class="repeat-template">
+      <template class="repeat-template">
         <tr class="repeat-item">
           <td>
-            <input type="text" name="name[{++}]"/>
+            <input type="text" name="name[{++}]" />
           </td>
-        <td class="repeater">
-          <div class="repeat-container-2">
-            <div class="repeat-item">
-              <input type="text"/>
-              <a class="repeat-add-2" class="repeat-add-2">
-                <i class="fa fa-plus"></i>
-              </a>
+          <td class="repeater">
+            <div class="repeat-container-2">
+              <div class="repeat-item nested-repeat-item">
+                <input type="text" />
+                <a class="repeat-add-2 add-btn">
+                  <i class="fa fa-plus"></i>
+                </a>
+              </div>
             </div>
-          </div>
-        </td>
+            <template class="repeat-template-2">
+              <div class="repeat-item nested-repeat-item">
+                <input type="text" />
+                <a class="repeat-del">
+                  <i class="fa fa-minus"></i>
+                </a>
+              </div>
+            </template>
+          </td>
           <td>
             <a class="repeat-del">
               <i class="fa fa-minus"></i>
             </a>
           </td>
         </tr>
-      </script>
+      </template>
     </div>
-    <!-- <div class="repeater">
-      <button id="repeat-add"><i class="fa fa-plus"></i></button>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Address</th>
-            <th width="100"></th>
-          </tr>
-        </thead>
-        <tbody id="repeat-container">
-
-        </tbody>
-      </table>
-      <script type="text" id="repeat-template-2">
-        <div class="repeat-item">
-          <input type="text"/>
-          <a class="repeat-del">
-            <i class="fa fa-minus"></i>
-          </a>
-        </div>
-      </script>
-      <script type="text" id="repeat-template">
-        <tr class="repeat-item">
-          <td>
-            <input type="text" name="name[{++}]"/>
-          </td>
-        <td class="repeater">
-          <div id="repeat-container-2">
-            <div class="repeat-item">
-              <input type="text"/>
-              <a class="repeat-add" id="repeat-add-2">
-                <i class="fa fa-plus"></i>
-              </a>
-            </div>
-          </div>
-        </td>
-          <td>
-            <a class="repeat-del">
-              <i class="fa fa-minus"></i>
-            </a>
-          </td>
-        </tr>
-      </script>
-    </div> -->
-
-    <!-- <div class="code">
-      <pre>
-  var repeat = new Repeater({
-    container: '#repeat-container',
-    template: '#repeat-template',
-    addButton: '#repeat-add',
-    startingRepeat: 1,
-    min: 1,
-    max: 3,
-    afterAdd: function(item) {
-      repeat2.reInit();
-    }
-  })
-
-  var repeat2 = new Repeater({
-    container: '#repeat-container-2',
-    template: '#repeat-template-2',
-    addButton: '#repeat-add-2',
-    max: 4
-  });</pre>
-    </div> -->
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/js/all.min.js"></script>

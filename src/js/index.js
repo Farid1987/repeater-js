@@ -174,7 +174,7 @@
   }
 
   // function findParentByclass
-  // find parent element with specific class, like parents() in jquery
+  // find parent element with specific class
   function findParentByclass(el, classParentToFind) {
     if (el.parentNode.classList.contains(classParentToFind)) {
       return el.parentNode;
