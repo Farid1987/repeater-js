@@ -52,7 +52,7 @@ module.exports = function (grunt) {
           sourceMap: false,
         },
         files: {
-          "dist/js/repeatable.min.js": "src/js-compiled/index-compiled.js",
+          "dist/js/repeater.min.js": "src/js-compiled/index-compiled.js",
         },
       },
     },
