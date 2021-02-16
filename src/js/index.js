@@ -19,9 +19,10 @@
       template: "",
       addButton: "",
       startingRepeat: 0,
+      numTemplate: '{\\+\\+}',
       min: 0,
       max: null,
-      beforeAdd: function () {},
+      beforeAdd: function (clickedButton) {},
       afterAdd: function (item) {},
       beforeDelete: function (item) {
         return true;
@@ -46,9 +47,8 @@
       return;
     }
 
-    const repeaterWrapper = findParentByclass(clickedButton, "repeater");
+    const repeaterWrapper = findParentByClass(clickedButton, "repeater");
     const container = (repeaterWrapper) ? repeaterWrapper.querySelector(this.options.container) : null;
-    const template = getSpecificTemplate.call(this, repeaterWrapper);
 
     if (this.options.max && checkMaximum.call(this, container)) {
       // console.log(checkMaximum.call(this, container));
@@ -56,10 +56,11 @@
     }
     
     try {
-      this.options.beforeAdd.call(this);
+      this.options.beforeAdd.call(this, clickedButton);
 
+      const template = getSpecificTemplate.call(this, repeaterWrapper);
+      
       container.insertAdjacentHTML("beforeend", template);
-
       this.options.min && checkMinimum.call(this, container)
         ? disabledButtonDel.call(this, container)
         : enabledButtonDel.call(this, container);
@@ -73,7 +74,7 @@
 
           if (buttonDel.classList.contains("disabled")) return;
 
-          const elementToDel = findParentByclass(buttonDel, "repeat-item");
+          const elementToDel = findParentByClass(buttonDel, "repeat-item");
           this.deleteItem(elementToDel);
         });
       }
@@ -81,7 +82,7 @@
       // run function after add Element
       this.options.afterAdd.call(this, lastItem);
     } catch (error) {
-      console.error('Error Add Element');
+      console.error('Error Add Element', error);
     }
   };
 
@@ -94,7 +95,7 @@
       return;
     }
 
-    const repeaterWrapper = findParentByclass(elementToDel, "repeater");
+    const repeaterWrapper = findParentByClass(elementToDel, "repeater");
     const container = (repeaterWrapper) ? repeaterWrapper.querySelector(this.options.container) : null;
 
     if (this.options.min && checkMinimum.call(this, container)) {
@@ -221,16 +222,17 @@
     if (!wrapper) return null;
 
     let template = wrapper.querySelector(this.options.template).innerHTML;
-    template = template.replace(/{\++}/g, this.options.startingRepeat++);
+    let regex = new RegExp(this.options.numTemplate, "g");
+    template = template.replace(regex, this.options.startingRepeat++);
     return template;
   }
 
-  // function findParentByclass
+  // function findParentByClass
   // find parent element with specific class
-  function findParentByclass(el, classParentToFind) {
+  function findParentByClass(el, classParentToFind) {
     if (el.parentNode.tagName == "HTML" || !el.parentNode) return;
     if (el.parentNode.classList.contains(classParentToFind)) return el.parentNode;
-    return findParentByclass(el.parentNode, classParentToFind);
+    return findParentByClass(el.parentNode, classParentToFind);
   }
 
   // function getLastItem
@@ -270,7 +272,7 @@
         btn.addEventListener("click", (e) => {
           e.preventDefault();
 
-          const elementToDel = findParentByclass(btn, "repeat-item");
+          const elementToDel = findParentByClass(btn, "repeat-item");
           if (elementToDel) repeater.deleteItem(elementToDel);
         });
       }

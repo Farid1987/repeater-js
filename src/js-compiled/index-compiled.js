@@ -27,9 +27,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       template: "",
       addButton: "",
       startingRepeat: 0,
+      numTemplate: '{\\+\\+}',
       min: 0,
       max: null,
-      beforeAdd: function beforeAdd() {},
+      beforeAdd: function beforeAdd(clickedButton) {},
       afterAdd: function afterAdd(item) {},
       beforeDelete: function beforeDelete(item) {
         return true;
@@ -54,9 +55,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       return;
     }
 
-    var repeaterWrapper = findParentByclass(clickedButton, "repeater");
+    var repeaterWrapper = findParentByClass(clickedButton, "repeater");
     var container = repeaterWrapper ? repeaterWrapper.querySelector(this.options.container) : null;
-    var template = getSpecificTemplate.call(this, repeaterWrapper);
 
     if (this.options.max && checkMaximum.call(this, container)) {
       // console.log(checkMaximum.call(this, container));
@@ -64,10 +64,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
 
     try {
-      this.options.beforeAdd.call(this);
+      this.options.beforeAdd.call(this, clickedButton);
+
+      var template = getSpecificTemplate.call(this, repeaterWrapper);
 
       container.insertAdjacentHTML("beforeend", template);
-
       this.options.min && checkMinimum.call(this, container) ? disabledButtonDel.call(this, container) : enabledButtonDel.call(this, container);
 
       var lastItem = getLastItem(container);
@@ -79,7 +80,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
           if (buttonDel.classList.contains("disabled")) return;
 
-          var elementToDel = findParentByclass(buttonDel, "repeat-item");
+          var elementToDel = findParentByClass(buttonDel, "repeat-item");
           _this.deleteItem(elementToDel);
         });
       }
@@ -87,7 +88,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       // run function after add Element
       this.options.afterAdd.call(this, lastItem);
     } catch (error) {
-      console.error('Error Add Element');
+      console.error('Error Add Element', error);
     }
   };
 
@@ -98,7 +99,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       return;
     }
 
-    var repeaterWrapper = findParentByclass(elementToDel, "repeater");
+    var repeaterWrapper = findParentByClass(elementToDel, "repeater");
     var container = repeaterWrapper ? repeaterWrapper.querySelector(this.options.container) : null;
 
     if (this.options.min && checkMinimum.call(this, container)) {
@@ -355,16 +356,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     if (!wrapper) return null;
 
     var template = wrapper.querySelector(this.options.template).innerHTML;
-    template = template.replace(/{\++}/g, this.options.startingRepeat++);
+    var regex = new RegExp(this.options.numTemplate, "g");
+    template = template.replace(regex, this.options.startingRepeat++);
     return template;
   }
 
-  // function findParentByclass
+  // function findParentByClass
   // find parent element with specific class
-  function findParentByclass(el, classParentToFind) {
+  function findParentByClass(el, classParentToFind) {
     if (el.parentNode.tagName == "HTML" || !el.parentNode) return;
     if (el.parentNode.classList.contains(classParentToFind)) return el.parentNode;
-    return findParentByclass(el.parentNode, classParentToFind);
+    return findParentByClass(el.parentNode, classParentToFind);
   }
 
   // function getLastItem
@@ -459,7 +461,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           btn.addEventListener("click", function (e) {
             e.preventDefault();
 
-            var elementToDel = findParentByclass(btn, "repeat-item");
+            var elementToDel = findParentByClass(btn, "repeat-item");
             if (elementToDel) repeater.deleteItem(elementToDel);
           });
         };
